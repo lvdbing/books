@@ -13,3 +13,21 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+
+# testing
+/testing/
+/test/
+
+# password files
+password.yaml
+pwd.yaml
+
+# swagger docs
+/docs/
+
+# log
+*.log
+
+# storage
+/storage/
