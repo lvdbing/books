@@ -2,11 +2,13 @@ package routers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/lvdbing/books/blog-service/global"
 	"github.com/lvdbing/books/blog-service/internal/middleware"
 	"github.com/lvdbing/books/blog-service/internal/routers/api"
 	v1 "github.com/lvdbing/books/blog-service/internal/routers/api/v1"
+	"github.com/lvdbing/books/blog-service/pkg/limiter"
 
 	_ "github.com/lvdbing/books/blog-service/docs"
 
@@ -15,10 +17,28 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+var methodLimiters = limiter.NewMethodLimiter().AddBuckets(
+	limiter.LimiterBucketRule{
+		Key:          "/auth",
+		FillInterval: time.Second,
+		Capacity:     10,
+		Quantum:      10,
+	},
+)
+
 func NewRouter() *gin.Engine {
 	r := gin.New()
-	r.Use(gin.Logger())
-	r.Use(gin.Recovery())
+	if global.ServerSetting.RunMode == "debug" {
+		r.Use(gin.Logger())
+		r.Use(gin.Recovery())
+	} else {
+		r.Use(middleware.AccessLog())
+		r.Use(middleware.Recovery())
+	}
+
+	r.Use(middleware.RateLimiter(methodLimiters))
+	r.Use(middleware.ContextTimeout(time.Second * 60))
+	r.Use(middleware.Tracing())
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"github.com/lvdbing/books/blog-service/global"
 	"github.com/lvdbing/books/blog-service/pkg/app"
 	"github.com/lvdbing/books/blog-service/pkg/errcode"
 
@@ -33,6 +34,7 @@ func JWT() gin.HandlerFunc {
 		}
 
 		if ecode != errcode.Success {
+			global.Logger.Error(c, "valid token error")
 			resp := app.NewResponse(c)
 			resp.ToErrorResponse(ecode)
 			c.Abort()
